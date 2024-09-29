@@ -1,11 +1,11 @@
-==207872== Helgrind, a thread error detector
-==207872== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
-==207872== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==207872== Command: ./client
-==207872== Parent PID: 207871
-==207872== 
-==207872== 
-==207872== Use --history-level=approx or =none to gain increased speed, at
-==207872== the cost of reduced accuracy of conflicting-access information
-==207872== For lists of detected and suppressed errors, rerun with: -s
-==207872== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==296667== Helgrind, a thread error detector
+==296667== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
+==296667== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==296667== Command: ./client
+==296667== Parent PID: 296666
+==296667== 
+==296610== 
+==296610== Use --history-level=approx or =none to gain increased speed, at
+==296610== the cost of reduced accuracy of conflicting-access information
+==296610== For lists of detected and suppressed errors, rerun with: -s
+==296610== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2024-09-29 19:27:04</td>
+            <td class="headerValue">2024-09-29 20:11:15</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntry">5</td>
@@ -223,24 +223,24 @@
 <a name="161"><span class="lineNum">     161 </span>            : </a>
 <a name="162"><span class="lineNum">     162 </span>            :     do</a>
 <a name="163"><span class="lineNum">     163 </span>            :     {</a>
-<a name="164"><span class="lineNum">     164 </span><span class="lineCov">       2023 :         FD_ZERO(&amp;readfds);</span></a>
-<a name="165"><span class="lineNum">     165 </span><span class="lineCov">        119 :         FD_SET(sock, &amp;readfds);</span></a>
-<a name="166"><span class="lineNum">     166 </span><span class="lineCov">        119 :         tv.tv_sec = 0;</span></a>
-<a name="167"><span class="lineNum">     167 </span><span class="lineCov">        119 :         tv.tv_usec = 100000; // 100ms timeout</span></a>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">       2006 :         FD_ZERO(&amp;readfds);</span></a>
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">        118 :         FD_SET(sock, &amp;readfds);</span></a>
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">        118 :         tv.tv_sec = 0;</span></a>
+<a name="167"><span class="lineNum">     167 </span><span class="lineCov">        118 :         tv.tv_usec = 100000; // 100ms timeout</span></a>
 <a name="168"><span class="lineNum">     168 </span>            : </a>
-<a name="169"><span class="lineNum">     169 </span><span class="lineCov">        119 :         retval = select(sock + 1, &amp;readfds, NULL, NULL, &amp;tv);</span></a>
-<a name="170"><span class="lineNum">     170 </span><span class="lineCov">        119 :         if (retval == -1)</span></a>
+<a name="169"><span class="lineNum">     169 </span><span class="lineCov">        118 :         retval = select(sock + 1, &amp;readfds, NULL, NULL, &amp;tv);</span></a>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">        118 :         if (retval == -1)</span></a>
 <a name="171"><span class="lineNum">     171 </span>            :         {</a>
 <a name="172"><span class="lineNum">     172 </span><span class="lineNoCov">          0 :             perror(&quot;select()&quot;);</span></a>
 <a name="173"><span class="lineNum">     173 </span><span class="lineNoCov">          0 :             break;</span></a>
 <a name="174"><span class="lineNum">     174 </span>            :         }</a>
-<a name="175"><span class="lineNum">     175 </span><span class="lineCov">        119 :         else if (retval)</span></a>
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">        118 :         else if (retval)</span></a>
 <a name="176"><span class="lineNum">     176 </span>            :         {</a>
-<a name="177"><span class="lineNum">     177 </span><span class="lineCov">         71 :             valread = read(sock, buffer, sizeof(buffer) - 1);</span></a>
-<a name="178"><span class="lineNum">     178 </span><span class="lineCov">         71 :             if (valread &gt; 0)</span></a>
+<a name="177"><span class="lineNum">     177 </span><span class="lineCov">         70 :             valread = read(sock, buffer, sizeof(buffer) - 1);</span></a>
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">         70 :             if (valread &gt; 0)</span></a>
 <a name="179"><span class="lineNum">     179 </span>            :             {</a>
-<a name="180"><span class="lineNum">     180 </span><span class="lineCov">         70 :                 buffer[valread] = '\0';</span></a>
-<a name="181"><span class="lineNum">     181 </span><span class="lineCov">         70 :                 fullResponse += buffer;</span></a>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">         69 :                 buffer[valread] = '\0';</span></a>
+<a name="181"><span class="lineNum">     181 </span><span class="lineCov">         69 :                 fullResponse += buffer;</span></a>
 <a name="182"><span class="lineNum">     182 </span>            :             }</a>
 <a name="183"><span class="lineNum">     183 </span>            :             else</a>
 <a name="184"><span class="lineNum">     184 </span>            :             {</a>
@@ -251,7 +251,7 @@
 <a name="189"><span class="lineNum">     189 </span>            :         {</a>
 <a name="190"><span class="lineNum">     190 </span><span class="lineCov">         48 :             break; // Timeout occurred</span></a>
 <a name="191"><span class="lineNum">     191 </span>            :         }</a>
-<a name="192"><span class="lineNum">     192 </span><span class="lineCov">         70 :     } while (true);</span></a>
+<a name="192"><span class="lineNum">     192 </span><span class="lineCov">         69 :     } while (true);</span></a>
 <a name="193"><span class="lineNum">     193 </span>            : </a>
 <a name="194"><span class="lineNum">     194 </span><span class="lineCov">         98 :     return fullResponse;</span></a>
 <a name="195"><span class="lineNum">     195 </span><span class="lineNoCov">          0 : }</span></a>

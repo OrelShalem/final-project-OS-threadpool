@@ -4,8 +4,6 @@
 #include <iostream>
 #include <string>
 
-// הסר את ההגדרה של cout_mutex מכאן
-
 Server *globalServerPtr = nullptr;
 
 void signalHandler(int signum)
@@ -36,23 +34,26 @@ void consoleInputThread(Server &server)
 
 int main()
 {
-    Server server(9036);
-    globalServerPtr = &server;
-
-    // רשום את מטפל הסיגנל
-    signal(SIGINT, signalHandler);
-    signal(SIGTERM, signalHandler);
-
-    // הפעל thread נפרד לקליטת קלט מהקונסול
-    std::thread inputThread(consoleInputThread, std::ref(server));
-
-    server.run();
-
-    // חכה ל-thread של הקלט לסיים
-    if (inputThread.joinable())
     {
-        inputThread.join();
+        Server server(9036);
+        globalServerPtr = &server;
+
+        // רשום את מטפל הסיגנל
+        signal(SIGINT, signalHandler);
+        signal(SIGTERM, signalHandler);
+
+        // הפעל thread נפרד לקליטת קלט מהקונסול
+        std::thread inputThread(consoleInputThread, std::ref(server));
+
+        server.run();
+
+        // חכה ל-thread של הקלט לסיים
+        if (inputThread.joinable())
+        {
+            inputThread.join();
+        }
     }
 
+    globalServerPtr = nullptr;
     return 0;
 }

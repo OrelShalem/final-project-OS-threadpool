@@ -40,11 +40,11 @@ $(CLIENT_EXEC): client_main.o src/client/Client.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(EXEC) $(CLIENT_EXEC) client_main.o src/client/Client.o memcheck_server.txt memcheck_client.txt helgrind_server.txt helgrind_client.txt
+	rm -f $(OBJS) $(EXEC) $(CLIENT_EXEC) client_main.o src/client/Client.o
 	find . -name "*.gcno" -type f -delete
 	find . -name "*.gcda" -type f -delete
 	find . -name "*.gcov" -type f -delete
-	rm -rf coverage_report
+	
 
 # Valgrind targets for server
 memcheck_server: $(EXEC)

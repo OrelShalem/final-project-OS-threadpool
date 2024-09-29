@@ -17,7 +17,7 @@
 
 std::mutex Server::cout_mutex;
 
-Server::Server(int port) : port(port), threadPool(4), isGraphBusy(false), sharedGraph()
+Server::Server(int port) : port(port), threadPool(4), isGraphBusy(false), sharedGraph(), serverSocket(-1)
 {
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == -1)
@@ -69,42 +69,67 @@ void Server::run()
     {
         fd_set readfds;
         FD_ZERO(&readfds);
-        FD_SET(serverSocket, &readfds);
+
+        {
+            std::lock_guard<std::mutex> lock(sharedGraphMutex);
+            if (serverSocket == -1)
+            {
+                break;
+            }
+            FD_SET(serverSocket, &readfds);
+        }
 
         struct timeval timeout;
-        timeout.tv_sec = 1; // בדוק כל שנייה
+        timeout.tv_sec = 1;
         timeout.tv_usec = 0;
 
-        int activity = select(serverSocket + 1, &readfds, NULL, NULL, &timeout);
-
-        if (activity < 0 && errno != EINTR)
+        int maxfd;
         {
+            std::lock_guard<std::mutex> lock(sharedGraphMutex);
+            maxfd = serverSocket;
+        }
+
+        int activity = select(maxfd + 1, &readfds, NULL, NULL, &timeout);
+
+        if (activity < 0)
+        {
+            if (errno == EINTR)
+                continue;
             perror("select error");
             break;
         }
 
         if (activity == 0)
-        {
-            // timeout - בדוק אם צריך לצאת
             continue;
-        }
 
-        if (FD_ISSET(serverSocket, &readfds))
         {
-            int clientSocket = accept(serverSocket, nullptr, nullptr);
-            if (clientSocket < 0)
+            std::lock_guard<std::mutex> lock(sharedGraphMutex);
+            if (FD_ISSET(serverSocket, &readfds))
             {
-                if (errno == EINTR || errno == EWOULDBLOCK)
-                    continue;
-                perror("Accept failed");
-                break;
+                int clientSocket = accept(serverSocket, nullptr, nullptr);
+                if (clientSocket < 0)
+                {
+                    if (errno == EINTR || errno == EWOULDBLOCK)
+                        continue;
+                    if (errno == EBADF && shouldExit.load(std::memory_order_acquire))
+                        break; // השרת נסגר, זה צפוי
+                    perror("Accept failed");
+                    break;
+                }
+                threadPool.enqueue([this, clientSocket]()
+                                   { handleClient(clientSocket); });
             }
-            threadPool.enqueue([this, clientSocket]()
-                               { handleClient(clientSocket); });
         }
     }
 
-    shutdown();
+    {
+        std::lock_guard<std::mutex> lock(sharedGraphMutex);
+        if (serverSocket != -1)
+        {
+            close(serverSocket);
+            serverSocket = -1;
+        }
+    }
 }
 
 void Server::shutdown()
@@ -116,7 +141,14 @@ void Server::shutdown()
         std::cout << "Server is shutting down..." << std::endl;
     }
 
-    close(serverSocket);
+    {
+        std::lock_guard<std::mutex> lock(sharedGraphMutex);
+        if (serverSocket != -1)
+        {
+            close(serverSocket);
+            serverSocket = -1;
+        }
+    }
 
     threadPool.exit();
 }

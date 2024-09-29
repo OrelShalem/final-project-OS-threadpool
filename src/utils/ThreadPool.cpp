@@ -17,10 +17,7 @@ ThreadPool::~ThreadPool()
 void ThreadPool::enqueue(std::function<void()> task)
 {
     std::unique_lock<std::mutex> lock(queueMutex);
-    if (stop)
-        throw std::runtime_error("enqueue on stopped ThreadPool");
-    tasks.emplace(std::move(task));
-    lock.unlock();
+    tasks.push(std::move(task));
     condition.notify_one();
 }
 
@@ -47,11 +44,20 @@ void ThreadPool::exit()
     {
         std::unique_lock<std::mutex> lock(queueMutex);
         stop = true;
+        condition.notify_all();
     }
-    condition.notify_all();
     for (std::thread &worker : workers)
     {
         if (worker.joinable())
-            worker.join();
+        {
+            try
+            {
+                worker.join();
+            }
+            catch (const std::system_error &e)
+            {
+                // התעלם משגיאות בזמן סגירת החוטים
+            }
+        }
     }
 }
