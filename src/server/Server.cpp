@@ -131,14 +131,24 @@ void Server::handleClient(int clientSocket)
         ssize_t bytesRead = read(clientSocket, buffer, sizeof(buffer) - 1);
         if (bytesRead <= 0)
         {
-            break; // הלקוח התנתק
+            // הלקוח התנתק או שיש שגיאת קריאה
+            break;
         }
 
         std::string request(buffer);
+        request.erase(std::remove(request.begin(), request.end(), '\n'), request.end());
+        request.erase(std::remove(request.begin(), request.end(), '\r'), request.end());
+
         {
             std::lock_guard<std::mutex> lock(cout_mutex);
             std::cout << "Debug: Received request: '" << request << "'" << std::endl;
         }
+
+        if (request.empty())
+        {
+            continue; // התעלם מקלט ריק
+        }
+
         std::istringstream iss(request);
         std::string command;
         iss >> command;
@@ -182,10 +192,16 @@ void Server::handleClient(int clientSocket)
         }
         else if (command == "exit")
         {
-            sendResponse(clientSocket, "Server is shutting down. Goodbye!\n");
-            shouldExit = true; // סמן שהשרת צריך לצאת
-            close(clientSocket);
-            return; // צא מהפונקציה
+            sendResponse(clientSocket, "Closing connection. Goodbye!\n");
+            break;
+        }
+        else if (command == "change_weight")
+        {
+            handleChangeWeightCommand(clientSocket, iss);
+        }
+        else if (command == "print_graph")
+        {
+            handlePrintGraphCommand(clientSocket);
         }
         else
         {
@@ -307,7 +323,21 @@ void Server::handleAddVertexCommand(int clientSocket, std::istringstream &iss)
         return;
     }
 
-    int existingVertex = std::stoi(buffer);
+    std::string input(buffer);
+    input.erase(std::remove(input.begin(), input.end(), '\n'), input.end());
+
+    int existingVertex;
+    try
+    {
+        existingVertex = std::stoi(input);
+    }
+    catch (const std::invalid_argument &e)
+    {
+        sendResponse(clientSocket, "Invalid input. No edge added.\n");
+        releaseGraphLock();
+        return;
+    }
+
     if (existingVertex >= 0 && existingVertex < newVertexIndex)
     {
         sendResponse(clientSocket, "Enter the weight for the edge: ");
@@ -319,7 +349,21 @@ void Server::handleAddVertexCommand(int clientSocket, std::istringstream &iss)
             return;
         }
 
-        int weight = std::stoi(buffer);
+        input = std::string(buffer);
+        input.erase(std::remove(input.begin(), input.end(), '\n'), input.end());
+
+        int weight;
+        try
+        {
+            weight = std::stoi(input);
+        }
+        catch (const std::invalid_argument &e)
+        {
+            sendResponse(clientSocket, "Invalid weight. No edge added.\n");
+            releaseGraphLock();
+            return;
+        }
+
         sharedGraph.addEdge(newVertexIndex, existingVertex, weight);
         sendResponse(clientSocket, "Edge added: " + std::to_string(newVertexIndex) + " - " + std::to_string(existingVertex) + " : " + std::to_string(weight) + "\n");
     }
@@ -343,7 +387,16 @@ void Server::handleAddEdgeCommand(int clientSocket, std::istringstream &iss)
     // print format: add_edge <source> <destination> <weight>
     sendResponse(clientSocket, "Enter the source, destination, and weight of the edge:\n");
     int source, destination, weight;
-    iss >> source >> destination >> weight;
+    try
+    {
+        iss >> source >> destination >> weight;
+    }
+    catch (const std::invalid_argument &e)
+    {
+        sendResponse(clientSocket, "Invalid input. Please enter integers for source, destination, and weight.\n");
+        releaseGraphLock();
+        return;
+    }
 
     if (source < 0 || source >= sharedGraph.getVertices() ||
         destination < 0 || destination >= sharedGraph.getVertices())
@@ -578,6 +631,47 @@ void Server::handleMetricCommand(int clientSocket, std::istringstream &iss)
     }
 
     sendResponse(clientSocket, response);
+
+    releaseGraphLock();
+}
+
+void Server::handleChangeWeightCommand(int clientSocket, std::istringstream &iss)
+{
+    if (!acquireGraphLock(clientSocket))
+    {
+        return;
+    }
+
+    int source, destination, newWeight;
+    if (!(iss >> source >> destination >> newWeight))
+    {
+        sendResponse(clientSocket, "Error: Invalid input for change_weight command.\n");
+        releaseGraphLock();
+        return;
+    }
+
+    if (sharedGraph.changeWeight(source, destination, newWeight))
+    {
+        sendResponse(clientSocket, "Edge weight changed: " + std::to_string(source) + " - " +
+                                       std::to_string(destination) + " : " + std::to_string(newWeight) + "\n");
+    }
+    else
+    {
+        sendResponse(clientSocket, "Error: Edge not found or invalid vertices.\n");
+    }
+
+    releaseGraphLock();
+}
+
+void Server::handlePrintGraphCommand(int clientSocket)
+{
+    if (!acquireGraphLock(clientSocket))
+    {
+        return;
+    }
+
+    std::string graphRepresentation = sharedGraph.toString();
+    sendResponse(clientSocket, "Current graph:\n" + graphRepresentation);
 
     releaseGraphLock();
 }

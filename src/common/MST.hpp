@@ -8,5 +8,5 @@ public:
     // find the MST of the graph
     virtual std::vector<Edge> findMST(const Graph &graph) = 0;
     // destructor
-    virtual ~MST() = default;
+    // virtual ~MST() = default;
 };

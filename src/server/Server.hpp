@@ -47,6 +47,8 @@ private:
     void handleAddEdgeCommand(int clientSocket, std::istringstream &iss);
     void handleRemoveEdgeCommand(int clientSocket, std::istringstream &iss);
     void handleRemoveVertexCommand(int clientSocket, std::istringstream &iss);
+    void handleChangeWeightCommand(int clientSocket, std::istringstream &iss);
+    void handlePrintGraphCommand(int clientSocket);
 
     static std::mutex cout_mutex;
 };

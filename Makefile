@@ -1,5 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++14 -pthread -g
+CXXFLAGS = -std=c++14 -pthread -g -O0 -fprofile-arcs -ftest-coverage
+LDFLAGS = -lgcov --coverage
 
 SRCS = src/main.cpp \
        src/server/Server.cpp \
@@ -24,7 +25,7 @@ CLIENT_EXEC = client
 all: $(EXEC) $(CLIENT_EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
 client_main.o: client_main.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
@@ -33,13 +34,17 @@ src/client/Client.o: src/client/Client.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 $(CLIENT_EXEC): client_main.o src/client/Client.o
-	$(CXX) $(CXXFLAGS) -o $@ client_main.o src/client/Client.o
+	$(CXX) $(CXXFLAGS) -o $@ client_main.o src/client/Client.o $(LDFLAGS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(EXEC) $(CLIENT_EXEC) client_main.o src/client/Client.o memcheck_server.txt memcheck_client.txt helgrind_server.txt helgrind_client.txt
+	find . -name "*.gcno" -type f -delete
+	find . -name "*.gcda" -type f -delete
+	find . -name "*.gcov" -type f -delete
+	rm -rf coverage_report
 
 # Valgrind targets for server
 memcheck_server: $(EXEC)
@@ -58,4 +63,17 @@ helgrind_client: $(CLIENT_EXEC)
 # Run all Valgrind checks
 valgrind_check: memcheck_server helgrind_server memcheck_client helgrind_client
 
-.PHONY: all clean memcheck_server helgrind_server memcheck_client helgrind_client valgrind_check
+# Code coverage
+coverage: clean
+	$(MAKE) all
+	./run_tests.sh
+	lcov --capture --directory . --output-file coverage.info
+	lcov --remove coverage.info '/usr/*' --output-file coverage.info
+	genhtml coverage.info --output-directory coverage_report
+	@echo "Coverage report generated. Open coverage_report/index.html in your browser."
+
+clean_coverage:
+	find . -name "*.gcda" -type f -delete
+	find . -name "*.gcno" -type f -delete
+
+.PHONY: all clean memcheck_server helgrind_server memcheck_client helgrind_client valgrind_check coverage clean_coverage
