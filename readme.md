@@ -1,4 +1,4 @@
-# Graph Class #
+## Graph Class #
 The Graph class represents an undirected graph using an adjacency list, where vertices are connected by edges with associated weights. Each edge is stored twice in the adjacency list (for both directions), and the class provides a variety of methods for managing the vertices and edges of the graph.
 
 ## Edge Struct ##
