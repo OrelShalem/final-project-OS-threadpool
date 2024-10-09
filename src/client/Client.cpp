@@ -1,3 +1,4 @@
+// Include necessary headers
 #include "Client.hpp"
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -5,8 +6,11 @@
 #include <iostream>
 #include <cstring>
 #include <vector>
+
+// Constructor initializes Client with server address and port
 Client::Client(const std::string &address, int port) : address(address), port(port), sock(-1) {}
 
+// Destructor closes the socket if it's open
 Client::~Client()
 {
     if (sock != -1)
@@ -15,10 +19,12 @@ Client::~Client()
     }
 }
 
+// Establishes a connection to the server
 void Client::connectToServer()
 {
     if (sock == -1)
     {
+        // Create a new socket
         sock = socket(AF_INET, SOCK_STREAM, 0);
         if (sock < 0)
         {
@@ -26,38 +32,49 @@ void Client::connectToServer()
             return;
         }
 
+        // Set up the server address structure
         struct sockaddr_in serv_addr;
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_port = htons(port);
 
+        // Convert IP address from string to binary form
         if (inet_pton(AF_INET, address.c_str(), &serv_addr.sin_addr) <= 0)
         {
             std::cerr << "Invalid address" << std::endl;
             return;
         }
 
+        // Connect to the server
         if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         {
             std::cerr << "Connection failed" << std::endl;
             return;
         }
 
-        // קבלת התפריט הראשוני מהשרת
+        // Receive and display the initial menu from the server
         std::string initialMenu = receiveResponse();
         std::cout << initialMenu;
     }
 }
 
+// Sends a request to the server and handles the response
 void Client::sendRequest(const std::string &request)
 {
     connectToServer();
 
+    // Debug output
     std::cout << "Debug: Sending request: '" << request << "'" << std::endl;
+
+    // Send the request to the server
     send(sock, request.c_str(), request.size(), 0);
 
+    // Receive and display the server's response
     std::string response = receiveResponse();
     std::cout << response;
 
+    // Handle different types of responses
+
+    // If the graph is in use, offer to retry
     if (response.find("Error: Graph is currently in use") != std::string::npos)
     {
         std::cout << "The shared graph is currently in use. Would you like to retry? (y/n): ";
@@ -65,11 +82,12 @@ void Client::sendRequest(const std::string &request)
         std::getline(std::cin, answer);
         if (answer == "y" || answer == "Y")
         {
-            sendRequest(request); // נסה שוב
+            sendRequest(request); // Retry the request
             return;
         }
     }
 
+    // Handle graph initialization
     if (response.find("Shared graph initialized with") != std::string::npos)
     {
         int numEdges;
@@ -104,6 +122,7 @@ void Client::sendRequest(const std::string &request)
         send(sock, (algorithm + "\n").c_str(), algorithm.size() + 1, 0);
         std::cout << receiveResponse();
     }
+    // Handle MST creation and offer additional metrics
     else if (response.find("MST created using") != std::string::npos)
     {
         std::cout << response; // הדפס את כל התגובה כפי שהיא
@@ -133,6 +152,7 @@ void Client::sendRequest(const std::string &request)
     }
 }
 
+// Sends requests for various metrics
 void Client::sendMetricsRequests()
 {
     const std::vector<std::string> metrics = {
@@ -150,6 +170,7 @@ void Client::sendMetricsRequests()
     }
 }
 
+// Receives a response from the server
 std::string Client::receiveResponse()
 {
     char buffer[1024] = {0};
@@ -161,11 +182,13 @@ std::string Client::receiveResponse()
 
     do
     {
+        // Set up the file descriptor set and timeout for select()
         FD_ZERO(&readfds);
         FD_SET(sock, &readfds);
         tv.tv_sec = 0;
         tv.tv_usec = 100000; // 100ms timeout
 
+        // Wait for the socket to be ready for reading
         retval = select(sock + 1, &readfds, NULL, NULL, &tv);
         if (retval == -1)
         {
@@ -174,6 +197,7 @@ std::string Client::receiveResponse()
         }
         else if (retval)
         {
+            // Read data from the socket
             valread = read(sock, buffer, sizeof(buffer) - 1);
             if (valread > 0)
             {

@@ -4,8 +4,10 @@
 #include <iostream>
 #include <string>
 
+// Global pointer to the Server instance for signal handling
 Server *globalServerPtr = nullptr;
 
+// Signal handler function to gracefully shut down the server
 void signalHandler(int signum)
 {
     if (globalServerPtr)
@@ -15,6 +17,7 @@ void signalHandler(int signum)
     std::exit(signum);
 }
 
+// Function to handle console input in a separate thread
 void consoleInputThread(Server &server)
 {
     std::string input;
@@ -35,25 +38,28 @@ void consoleInputThread(Server &server)
 int main()
 {
     {
+        // Create a Server instance listening on port 9036
         Server server(9036);
         globalServerPtr = &server;
 
-        // רשום את מטפל הסיגנל
+        // Register signal handlers for SIGINT and SIGTERM
         signal(SIGINT, signalHandler);
         signal(SIGTERM, signalHandler);
 
-        // הפעל thread נפרד לקליטת קלט מהקונסול
+        // Start a separate thread to handle console input
         std::thread inputThread(consoleInputThread, std::ref(server));
 
+        // Run the server
         server.run();
 
-        // חכה ל-thread של הקלט לסיים
+        // Wait for the input thread to finish
         if (inputThread.joinable())
         {
             inputThread.join();
         }
     }
 
+    // Reset the global server pointer
     globalServerPtr = nullptr;
     return 0;
 }

@@ -19,7 +19,6 @@ public:
     void run();
     void shutdown();
 
-    // הוסף פונקציה סטטית ציבורית לנעילת cout
     static void lockCout() { cout_mutex.lock(); }
     static void unlockCout() { cout_mutex.unlock(); }
 
@@ -33,7 +32,7 @@ private:
     std::vector<Edge> lastMST;
     bool isGraphBusy;
     std::condition_variable graphCV;
-    std::atomic<bool> shouldExit{false}; // הוסף דגל יציאה
+    std::atomic<bool> shouldExit{false};
 
     void handleClient(int clientSocket);
     void handleInitCommand(int clientSocket, std::istringstream &iss);

@@ -14,17 +14,24 @@ public:
     ~ThreadPool();
 
     void enqueue(std::function<void()> task);
-    void exit(); // הוסף את הפונקציה stop() כ-public
+    void exit();
 
 private:
-    // חוטי עבודה
+    // Worker threads
     std::vector<std::thread> workers;
-    // תור של משימות
+    // Task queue
     std::queue<std::function<void()>> tasks;
-    // סנכרון
+    // Synchronization
     std::mutex queueMutex;
     std::condition_variable condition;
     std::atomic<bool> stop;
 
+    // Leader-Follower pattern additions
+    std::atomic<std::thread::id> currentLeader;
+    std::condition_variable leaderCondition;
+    std::mutex leaderMutex;
+
     void workerThread();
+    void becomeLeader();
+    void promoteNewLeader();
 };
