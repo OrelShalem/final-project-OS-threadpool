@@ -188,7 +188,6 @@ void ThreadPool::workerThread()
 }
 
 // Leader thread function
-// Leader thread function
 void ThreadPool::leaderThread(int serverSocket)
 {
     // Main loop for the leader thread
@@ -255,18 +254,18 @@ void ThreadPool::leaderThread(int serverSocket)
             condition.notify_one();
         }
 
-        // Log that this thread is now handling the client
+        // This thread becomes a follower and handles the client
         oss.str("");
         oss << "Thread " << std::this_thread::get_id() << " is handling the client";
         safePrint(oss.str());
 
-        // Handle client requests while connected and not stopping
+        // Handle client requests for the entire duration of the connection
         while (newClient->isConnected() && !stop_flag)
         {
             newClient->handle();
         }
 
-        // Log that the client has disconnected
+        // Client disconnected, this thread will return to being a worker
         oss.str("");
         oss << "Client disconnected, thread " << std::this_thread::get_id() << " is free again.";
         safePrint(oss.str());
