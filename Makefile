@@ -2,9 +2,8 @@ CXX = g++
 CXXFLAGS = -std=c++14 -pthread -g -O0 -fprofile-arcs -ftest-coverage
 LDFLAGS = -lgcov --coverage
 
-SRCS = src/main.cpp \
-       src/server/Server.cpp \
-       src/utils/ThreadPool.cpp \
+SRCS = src/server/server.cpp \
+       src/utils/threadpool.cpp \
        src/common/Graph.cpp \
        src/common/KruskalMST.cpp \
        src/common/PrimMST.cpp \
@@ -27,24 +26,20 @@ all: $(EXEC) $(CLIENT_EXEC)
 $(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-client_main.o: client_main.cpp
+src/client/client.o: src/client/client.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-src/client/Client.o: src/client/Client.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(CLIENT_EXEC): client_main.o src/client/Client.o
-	$(CXX) $(CXXFLAGS) -o $@ client_main.o src/client/Client.o $(LDFLAGS)
+$(CLIENT_EXEC): src/client/client.o
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(EXEC) $(CLIENT_EXEC) client_main.o src/client/Client.o
+	rm -f $(OBJS) $(EXEC) $(CLIENT_EXEC) src/client/client.o
 	find . -name "*.gcno" -type f -delete
 	find . -name "*.gcda" -type f -delete
 	find . -name "*.gcov" -type f -delete
-	
 
 # Valgrind targets for server
 memcheck_server: $(EXEC)
@@ -64,7 +59,7 @@ helgrind_client: $(CLIENT_EXEC)
 valgrind_check: memcheck_server helgrind_server memcheck_client helgrind_client
 
 # Code coverage
-coverage: clean
+coverage:
 	$(MAKE) all
 	./run_tests.sh
 	lcov --capture --directory . --output-file coverage.info

@@ -17,7 +17,31 @@ sleep 2
 
 # Run client tests
 ./client << EOF
-init 6
+1
+5
+0 1 4
+0 2 3
+1 2 1
+1 3 2
+2 3 4
+6
+prim
+7
+6
+kruskal
+7
+2
+3
+0 4 5
+4
+2
+5
+0 1
+8
+6
+prim
+7
+1
 10
 0 1 4
 0 2 3
@@ -29,40 +53,18 @@ init 6
 3 5 1
 4 5 5
 0 5 6
-mst
+6
 kruskal
-metric total_weight
-metric longest_path
-metric average_path
-metric shortest_path
-add_vtx
-0
 7
-add_edge 6 1 8
-add_edge 6 3 9
-remove_edge 0 1
-remove_vtx 2
-mst
-prim
-metric total_weight
-metric longest_path
-metric average_path
-metric shortest_path
-init 3
+2
 3
-0 1 1
-1 2 2
-0 2 3
-mst
-kruskal
-add_edge 0 1 4
-remove_edge 1 2
-remove_vtx 1
-add_edge 0 2 5
-add_edge 0 1 6
-change_weight 0 2 7
-print_graph
-exit
+1 6 2
+5
+1 6
+4
+6
+8
+9
 EOF
 
 # Give the server some time to process the exit command

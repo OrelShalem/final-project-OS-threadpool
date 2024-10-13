@@ -1,14 +1,13 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
-#include <string> // הוסף שורה זו
+#include <string>
 
 struct Edge
 {
     int source, destination, weight;
     Edge(int s, int d, int w) : source(s), destination(d), weight(w) {}
 
-    // Add this operator
     bool operator<(const Edge &other) const
     {
         return weight < other.weight;
@@ -18,7 +17,7 @@ struct Edge
 class Graph
 {
 public:
-    Graph(); // בנאי ברירת מחדל
+    Graph();
     Graph(int numVertices);
     void addEdge(int source, int destination, int weight);
     int addVertex();
@@ -30,8 +29,11 @@ public:
     int getEdges() const;
     void printGraph() const;
     std::string toString() const;
+    bool isConnected() const;
+    bool isInitialized() const;
+    void clear();
 
 private:
     std::unordered_map<int, std::vector<Edge>> adjacencyList;
-    int nextVertexId;
+    static int nextVertexId;
 };

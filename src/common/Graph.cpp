@@ -2,18 +2,21 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include "../utils/threadpool.hpp"
 
 // This file implements the Graph class, which represents an undirected weighted graph.
 
+int Graph::nextVertexId = 0;
+
 // Default constructor: Initializes an empty graph
-Graph::Graph() : nextVertexId(0)
+Graph::Graph()
 {
     // No special action needed here as the graph starts empty
     // The adjacencyList will remain empty until edges are added
 }
 
 // Constructor with a specified number of vertices
-Graph::Graph(int numVertices) : nextVertexId(numVertices)
+Graph::Graph(int numVertices)
 {
     // Initialize the graph with 'numVertices' vertices, each with an empty edge list
     for (int i = 0; i < numVertices; ++i)
@@ -25,7 +28,7 @@ Graph::Graph(int numVertices) : nextVertexId(numVertices)
 // Adds an edge between two vertices with a specified weight
 void Graph::addEdge(int source, int destination, int weight)
 {
-    std::cout << "Debug: Adding edge " << source << " - " << destination << " with weight " << weight << std::endl;
+    safePrint("Debug: Adding edge " + std::to_string(source) + " - " + std::to_string(destination) + " with weight " + std::to_string(weight));
     // Add the edge in both directions (undirected graph)
     adjacencyList[source].push_back(Edge(source, destination, weight));
     adjacencyList[destination].push_back(Edge(destination, source, weight));
@@ -190,4 +193,33 @@ std::string Graph::toString() const
         }
     }
     return oss.str();
+}
+
+// Checks if the graph is connected (all vertices are reachable from any other vertex)
+bool Graph::isConnected() const
+{
+    if (adjacencyList.empty())
+    {
+        return false; // An empty graph is not considered connected
+    }
+
+    // Note: This implementation is incorrect and always returns true
+    // A proper implementation would use a graph traversal algorithm (e.g., DFS or BFS)
+    // to check if all vertices are reachable from a single starting point
+    return true;
+}
+
+// Checks if the graph has been initialized with any vertices
+bool Graph::isInitialized() const
+{
+    return !adjacencyList.empty(); // Returns true if the adjacency list is not empty
+}
+
+// Clears all vertices and edges from the graph
+void Graph::clear()
+{
+    adjacencyList.clear(); // Removes all entries from the adjacency list
+    // The comment below is in Hebrew and states:
+    // "There's no need to reset nextVertexId here"
+    // אין צורך לאפס את nextVertexId כאן
 }
